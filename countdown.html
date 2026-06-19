@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Visszaszámláló</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #fff8f0 0%, #ffe8cc 40%, #ffd4a8 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Georgia', serif;
+      overflow: hidden;
+    }
+
+    /* Floating particles */
+    .particle {
+      position: fixed;
+      border-radius: 50%;
+      opacity: 0.15;
+      animation: float linear infinite;
+      pointer-events: none;
+    }
+
+    @keyframes float {
+      0% { transform: translateY(110vh) rotate(0deg); opacity: 0; }
+      10% { opacity: 0.15; }
+      90% { opacity: 0.15; }
+      100% { transform: translateY(-10vh) rotate(720deg); opacity: 0; }
+    }
+
+    .container {
+      text-align: center;
+      z-index: 10;
+      padding: 2rem;
+    }
+
+    /* Bird SVG */
+    .bird-wrap {
+      margin-bottom: 1.5rem;
+      animation: bobble 3s ease-in-out infinite;
+      filter: drop-shadow(0 20px 40px rgba(210,100,0,0.25));
+    }
+
+    @keyframes bobble {
+      0%, 100% { transform: translateY(0) rotate(-2deg); }
+      50% { transform: translateY(-18px) rotate(2deg); }
+    }
+
+    .bird-wrap svg {
+      width: 220px;
+      height: 220px;
+    }
+
+    /* Eyes blinking */
+    .eye-lid {
+      animation: blink 4s ease-in-out infinite;
+      transform-origin: center;
+    }
+
+    @keyframes blink {
+      0%, 90%, 100% { transform: scaleY(0); }
+      95% { transform: scaleY(1); }
+    }
+
+    h1 {
+      font-size: 1.1rem;
+      color: #c45a00;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      margin-bottom: 0.4rem;
+      font-weight: normal;
+    }
+
+    .deadline {
+      font-size: 1.8rem;
+      color: #7a2d00;
+      font-weight: bold;
+      margin-bottom: 2.5rem;
+      letter-spacing: 0.05em;
+    }
+
+    /* Countdown boxes */
+    .countdown {
+      display: flex;
+      gap: 1.2rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .box {
+      background: rgba(255,255,255,0.75);
+      backdrop-filter: blur(10px);
+      border: 2px solid rgba(220,120,40,0.3);
+      border-radius: 20px;
+      padding: 1.2rem 1.6rem;
+      min-width: 100px;
+      box-shadow: 0 8px 32px rgba(200,90,0,0.12), inset 0 1px 0 rgba(255,255,255,0.8);
+      transition: transform 0.1s;
+    }
+
+    .box:hover { transform: scale(1.05); }
+
+    .num {
+      font-size: 3.2rem;
+      font-weight: bold;
+      color: #d4620a;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+      text-shadow: 0 2px 8px rgba(200,80,0,0.2);
+    }
+
+    .label {
+      font-size: 0.7rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: #a06030;
+      margin-top: 0.4rem;
+    }
+
+    .separator {
+      font-size: 3rem;
+      color: #d4820a;
+      align-self: center;
+      margin-top: -0.5rem;
+      animation: pulse 1s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    .done-msg {
+      font-size: 2rem;
+      color: #d4620a;
+      font-weight: bold;
+      display: none;
+    }
+
+    footer {
+      margin-top: 2.5rem;
+      font-size: 0.75rem;
+      color: #c47840;
+      letter-spacing: 0.1em;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Floating feather particles -->
+<script>
+  for (let i = 0; i < 18; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    const size = Math.random() * 18 + 6;
+    p.style.cssText = `
+      width:${size}px; height:${size}px;
+      left:${Math.random()*100}vw;
+      background: hsl(${20 + Math.random()*30}, 90%, ${55 + Math.random()*20}%);
+      animation-duration: ${6 + Math.random()*12}s;
+      animation-delay: ${Math.random()*10}s;
+    `;
+    document.body.appendChild(p);
+  }
+</script>
+
+<div class="container">
+
+  <!-- Cute fluffy bird SVG -->
+  <div class="bird-wrap">
+    <svg viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="bodyGrad" cx="45%" cy="40%">
+          <stop offset="0%" stop-color="#ff9a40"/>
+          <stop offset="60%" stop-color="#e06010"/>
+          <stop offset="100%" stop-color="#b04000"/>
+        </radialGradient>
+        <radialGradient id="bellyGrad" cx="50%" cy="40%">
+          <stop offset="0%" stop-color="#ffc870"/>
+          <stop offset="100%" stop-color="#e08030"/>
+        </radialGradient>
+        <radialGradient id="eyeGrad" cx="35%" cy="30%">
+          <stop offset="0%" stop-color="#5a3a1a"/>
+          <stop offset="100%" stop-color="#1a0a00"/>
+        </radialGradient>
+        <filter id="fluff">
+          <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="4" result="noise"/>
+          <feDisplacementMap in="SourceGraphic" in2="noise" scale="6" xChannelSelector="R" yChannelSelector="G"/>
+        </filter>
+        <filter id="soft">
+          <feGaussianBlur stdDeviation="1.2"/>
+        </filter>
+      </defs>
+
+      <!-- Shadow -->
+      <ellipse cx="110" cy="208" rx="52" ry="8" fill="rgba(150,60,0,0.18)" filter="url(#soft)"/>
+
+      <!-- Feet -->
+      <g fill="#d05000" stroke="#a03500" stroke-width="1.2">
+        <rect x="88" y="195" width="6" height="16" rx="3"/>
+        <rect x="86" y="208" width="10" height="3" rx="1.5"/>
+        <rect x="92" y="210" width="8" height="3" rx="1.5"/>
+        <rect x="80" y="210" width="8" height="3" rx="1.5"/>
+        <rect x="122" y="195" width="6" height="16" rx="3"/>
+        <rect x="120" y="208" width="10" height="3" rx="1.5"/>
+        <rect x="126" y="210" width="8" height="3" rx="1.5"/>
+        <rect x="114" y="210" width="8" height="3" rx="1.5"/>
+      </g>
+
+      <!-- Body fluffy -->
+      <circle cx="110" cy="118" r="82" fill="url(#bodyGrad)" filter="url(#fluff)"/>
+      <circle cx="110" cy="118" r="78" fill="url(#bodyGrad)" opacity="0.6" filter="url(#fluff)"/>
+
+      <!-- Belly -->
+      <ellipse cx="110" cy="130" rx="42" ry="48" fill="url(#bellyGrad)" opacity="0.7"/>
+
+      <!-- Wing left -->
+      <ellipse cx="42" cy="130" rx="28" ry="20" fill="#c05008" transform="rotate(-20 42 130)" filter="url(#fluff)" opacity="0.85"/>
+      <!-- Wing right -->
+      <ellipse cx="178" cy="130" rx="28" ry="20" fill="#c05008" transform="rotate(20 178 130)" filter="url(#fluff)" opacity="0.85"/>
+
+      <!-- Head fluffy halo -->
+      <circle cx="110" cy="88" r="56" fill="#e06818" filter="url(#fluff)" opacity="0.5"/>
+
+      <!-- Tuft on top -->
+      <ellipse cx="96" cy="42" rx="10" ry="18" fill="#d05810" transform="rotate(-20 96 42)" filter="url(#fluff)"/>
+      <ellipse cx="110" cy="36" rx="10" ry="20" fill="#d86010" filter="url(#fluff)"/>
+      <ellipse cx="124" cy="42" rx="10" ry="18" fill="#d05810" transform="rotate(20 124 42)" filter="url(#fluff)"/>
+
+      <!-- Eye whites -->
+      <circle cx="88" cy="98" r="20" fill="white"/>
+      <circle cx="132" cy="98" r="20" fill="white"/>
+      <!-- Eye pupils -->
+      <circle cx="91" cy="101" r="13" fill="url(#eyeGrad)"/>
+      <circle cx="135" cy="101" r="13" fill="url(#eyeGrad)"/>
+      <!-- Eye shine -->
+      <circle cx="85" cy="95" r="5" fill="white" opacity="0.8"/>
+      <circle cx="129" cy="95" r="5" fill="white" opacity="0.8"/>
+      <circle cx="87" cy="93" r="2.5" fill="white"/>
+      <circle cx="131" cy="93" r="2.5" fill="white"/>
+      <!-- Blink lids -->
+      <rect class="eye-lid" x="68" y="78" width="40" height="40" rx="20" fill="#e06818"/>
+      <rect class="eye-lid" x="112" y="78" width="40" height="40" rx="20" fill="#e06818"/>
+
+      <!-- Beak -->
+      <path d="M102 118 L110 132 L118 118 Z" fill="#e07820" stroke="#c05800" stroke-width="1"/>
+      <path d="M102 118 L118 118" stroke="#c05800" stroke-width="1.5"/>
+
+      <!-- Cheek blush -->
+      <ellipse cx="74" cy="112" rx="12" ry="7" fill="#ff7040" opacity="0.25"/>
+      <ellipse cx="146" cy="112" rx="12" ry="7" fill="#ff7040" opacity="0.25"/>
+    </svg>
+  </div>
+
+  <h1>Visszaszámláló</h1>
+  <div class="deadline">Július 31.</div>
+
+  <div class="countdown" id="countdown">
+    <div class="box">
+      <div class="num" id="days">--</div>
+      <div class="label">Nap</div>
+    </div>
+    <div class="separator">:</div>
+    <div class="box">
+      <div class="num" id="hours">--</div>
+      <div class="label">Óra</div>
+    </div>
+    <div class="separator">:</div>
+    <div class="box">
+      <div class="num" id="minutes">--</div>
+      <div class="label">Perc</div>
+    </div>
+    <div class="separator">:</div>
+    <div class="box">
+      <div class="num" id="seconds">--</div>
+      <div class="label">Másodperc</div>
+    </div>
+  </div>
+
+  <div class="done-msg" id="done">🎉 Lejárt az idő! 🎉</div>
+
+  <footer>PureBreathe PRO &nbsp;·&nbsp; 2026</footer>
+</div>
+
+<script>
+  const target = new Date('2026-07-31T23:59:59');
+
+  function pad(n) { return String(n).padStart(2, '0'); }
+
+  function tick() {
+    const now = new Date();
+    const diff = target - now;
+
+    if (diff <= 0) {
+      document.getElementById('countdown').style.display = 'none';
+      document.getElementById('done').style.display = 'block';
+      return;
+    }
+
+    const days    = Math.floor(diff / 86400000);
+    const hours   = Math.floor((diff % 86400000) / 3600000);
+    const minutes = Math.floor((diff % 3600000) / 60000);
+    const seconds = Math.floor((diff % 60000) / 1000);
+
+    document.getElementById('days').textContent    = pad(days);
+    document.getElementById('hours').textContent   = pad(hours);
+    document.getElementById('minutes').textContent = pad(minutes);
+    document.getElementById('seconds').textContent = pad(seconds);
+  }
+
+  tick();
+  setInterval(tick, 1000);
+</script>
+</body>
+</html>
